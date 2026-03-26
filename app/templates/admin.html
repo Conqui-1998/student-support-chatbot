@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Admin Monitoring</title>
+	<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+	<main class="container admin-container">
+		<div class="top-nav">
+            <a href="/" class="pill-button">Back to chat</a>
+        </div>
+        
+        <h1>Technical Monitoring View</h1>
+        <p>Recent chatbot interactions for debugging and safeguard monitoring.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Query</th>
+                    <th>Category</th>
+                    <th>Fallback</th>
+                    <th>Sensitive</th>
+                    <th>Sources</th>
+					<th>Preview</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{rows | safe}}
+            </tbody>
+        </table>
+	</main>
+	
+	<script src="/static/app.js"></script>
+	<script>
+		const savedTheme =localStorage.getItem("theme") || "light";
+		if (savedTheme === "dark") {
+			document.body.classList.add("dark-mode");
+		}
+	</script>
+	<script>
+	function togglePreview(id) {
+		const previews = document.querySelectorAll(".snippet-preview");
+		
+		previews.forEach(preview => {
+			if (preview.id !== id) {
+				preview.style.display = "none";
+			}
+		});
+		
+		const selected = document.getElementById(id)
+		if (!selected) return;
+		
+		selected.style.display = selected.style.display === "block" ? "none" : "block";
+	}
+	</script>
+</body>
+</html>
