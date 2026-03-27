@@ -15,7 +15,7 @@ from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
 
 Temperature = 0.99
-Model = "gpt-4.1-mini-fake"
+Model = "gpt-4.1-mini"
 Fallback_Threshold = 1.1
 Preview_Length = 220
 
