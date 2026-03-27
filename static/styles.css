@@ -531,7 +531,7 @@ body.accessibility-mode .input-row input {
 }
 
 body.accessibility-mode #accessibilityToggle {
-	border: 2px solid #1b2430;
+	border: 2px solid #000;
 	font-weight: 700;
 }
 

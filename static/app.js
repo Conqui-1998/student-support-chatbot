@@ -99,11 +99,11 @@ function applyAccessibilityMode(enabled) {
 	
 	if(enabled) {
 		document.body.classList.add("accessibility-mode");
-		if(toggle) toggle.textContent = "Accessibility Mode: On";
+		if(toggle) toggle.textContent = "Accessibility: On";
 	}
 	else {
 		document.body.classList.remove("accessibility-mode");
-		if(toggle) toggle.textContent = "Accessibility Mode: Off";
+		if(toggle) toggle.textContent = "Accessibility: Off";
 	}
 }
 
