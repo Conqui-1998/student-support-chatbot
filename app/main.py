@@ -14,6 +14,10 @@ from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
 
+from starlett.middleware.sessions import SessionMiddleware
+from fastapi.responses import RedirectResponse
+import secrets
+
 Temperature = 0.99
 Model = "gpt-4.1-mini"
 Fallback_Threshold = 1.1
@@ -23,6 +27,21 @@ templates = Jinja2Templates(directory="app/templates")
 load_dotenv()
 
 app = FastAPI(title="Student Support Chatbot")
+
+MOODLE_ISSUER = os.getenv("MOODLE_ISSUER")
+MOODLE_CLIENT_ID = os.getenv("MOODLE_CLIENT_ID")
+MOODLE_AUTH_URL = os.getenv("MOODLE_AUTH_URL")
+MOODLE_JWKS_URL = os.getenv("MOODLE_JWKS_URL")
+LTI_REDIRECT_URI = os.getenv("LTI_REDIRECT_URI")
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET", "change-this-secret"),
+    same_site="none",
+    https_only=True,
+    )
+    
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -94,6 +113,7 @@ def admin_page(request: Request):
     
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
+
     query = req.message.strip()
     category = classify_query(query)
     sensitive = is_sensitive_query(query)
@@ -225,3 +245,52 @@ def chat(req: ChatRequest):
         fallback=False,
         category=category
     )
+    
+@app.get("/login")
+async def lti_login(request: Request):
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(32)
+
+    request.session["lti_state"] = state
+    request.session["lti_nonce"] = nonce
+
+    login_hint = request.query_params.get("login_hint")
+    lti_message_hint = request.query_params.get("lti_message_hint")
+
+    params = {
+        "scope": "openid",
+        "response_type": "id_token",
+        "client_id": MOODLE_CLIENT_ID,
+        "redirect_uri": LTI_REDIRECT_URI,
+        "login_hint": login_hint,
+        "state": state,
+        "response_mode": "form_post",
+        "nonce": nonce,
+        "prompt": "none",
+    }
+
+    if lti_message_hint:
+        params["lti_message_hint"] = lti_message_hint
+
+    query = "&".join(f"{k}={v}" for k, v in params.items() if v is not None)
+
+    return RedirectResponse(f"{MOODLE_AUTH_URL}?{query}")
+    
+@app.post("/launch")
+async def lti_launch(request: Request):
+    form = await request.form()
+
+    id_token = form.get("id_token")
+    state = form.get("state")
+
+    if not id_token:
+        return HTMLResponse("Missing LTI id_token", status_code=400)
+
+    if state != request.session.get("lti_state"):
+        return HTMLResponse("Invalid LTI state", status_code=400)
+
+    # Temporary: store token for now.
+    # Next step is validating JWT properly against Moodle JWKS.
+    request.session["lti_id_token"] = id_token
+
+    return FileResponse("static/index.html")

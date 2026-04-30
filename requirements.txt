@@ -6,3 +6,9 @@ faiss-cpu
 numpy
 pydantic
 jinja2
+PyJWT
+cryptography
+httpx
+python-multipart
+authlib
+itsdangerous
