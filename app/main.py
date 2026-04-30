@@ -246,7 +246,7 @@ def chat(req: ChatRequest):
         category=category
     )
     
-@app.get("/login")
+@app.api_route("/login", methods=["GET", "POST"])
 async def lti_login(request: Request):
     state = secrets.token_urlsafe(32)
     nonce = secrets.token_urlsafe(32)
