@@ -14,7 +14,7 @@ from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
 
-from starlett.middleware.sessions import SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import RedirectResponse
 import secrets
 
