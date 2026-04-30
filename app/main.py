@@ -302,3 +302,7 @@ async def lti_launch_get():
         "If you are seeing this from Moodle, check the Tool URL setting.",
         status_code=400
     )
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print("REQUEST:", request.method, request.url)
+    return await call_next(request)
