@@ -294,3 +294,11 @@ async def lti_launch(request: Request):
     request.session["lti_id_token"] = id_token
 
     return FileResponse("static/index.html")
+    
+@app.get("/launch")
+async def lti_launch_get():
+    return HTMLResponse(
+        "This LTI launch URL must be opened from Moodle, not directly. "
+        "If you are seeing this from Moodle, check the Tool URL setting.",
+        status_code=400
+    )
