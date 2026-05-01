@@ -1,6 +1,5 @@
 (function () {
 	const WIDGET_ID = "student-support-chatbot-widget";
-	const MOUNT_ID = "student-support-chatbot-mount";
 	const STYLE_ID = "student-support-chatbot-widget-styles";
 
 	function ensureStylesheet() {
@@ -213,7 +212,7 @@
 		const existing = document.getElementById(WIDGET_ID);
 		if (existing) return;
 
-		const mount = document.getElementById(MOUNT_ID) || document.body;
+		const mount = document.body;
 		const root = document.createElement("div");
 		root.id = WIDGET_ID;
 		root.innerHTML = createHtml();
