@@ -113,6 +113,43 @@
 		}
 	}
 
+	function createModuleBanner(root) {
+		let banner = root.querySelector(".module-status-banner");
+		if (!banner) {
+			banner = document.createElement("div");
+			banner.className = "module-status-banner";
+			root.querySelector(".widget-body").insertBefore(banner, root.querySelector(".note"));
+		}
+		return banner;
+	}
+
+	async function renderModuleBanner(root) {
+		if (!MODULE_KEY) return;
+		const banner = createModuleBanner(root);
+		banner.textContent = "Checking module sync...";
+		banner.className = "module-status-banner is-pending";
+
+		try {
+			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
+			const data = await res.json();
+			if (data && data.ok) {
+				if (data.exists && data.file_count > 0) {
+					banner.textContent = `Module markdown synced: ${data.file_count} file(s) found for course ${data.course_id ?? "unknown"}`;
+					banner.className = "module-status-banner is-ready";
+				} else {
+					banner.textContent = `Module markdown not found yet for course ${data.course_id ?? "unknown"}`;
+					banner.className = "module-status-banner is-empty";
+				}
+			} else {
+				banner.textContent = "Module sync status unavailable";
+				banner.className = "module-status-banner is-error";
+			}
+		} catch (err) {
+			banner.textContent = "Module sync status unavailable";
+			banner.className = "module-status-banner is-error";
+		}
+	}
+
 	function createHtml() {
 		return `
 			<div class="widget-launcher">
@@ -350,6 +387,7 @@
 		applyAccessibilityMode(localStorage.getItem("accessibilityMode") === "on");
 		renderStatusPill(root);
 		renderStatusDetail(root);
+		renderModuleBanner(root);
 	}
 
 	if (document.readyState === "loading") {

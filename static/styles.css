@@ -191,6 +191,34 @@ body {
 	min-height: 0;
 }
 
+.module-status-banner {
+	padding: 10px 12px;
+	border-radius: 12px;
+	font-size: 13px;
+	line-height: 1.35;
+	font-weight: 600;
+}
+
+.module-status-banner.is-pending {
+	background: #e9eef6;
+	color: #1f2937;
+}
+
+.module-status-banner.is-ready {
+	background: #d9f4e3;
+	color: #14532d;
+}
+
+.module-status-banner.is-empty {
+	background: #fff1cc;
+	color: #854d0e;
+}
+
+.module-status-banner.is-error {
+	background: #fde2e2;
+	color: #991b1b;
+}
+
 .widget-body .note {
 	margin: 0;
 	font-size: 0.9rem;
