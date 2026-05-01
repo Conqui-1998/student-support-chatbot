@@ -15,6 +15,7 @@ from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
 
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import secrets
 
@@ -40,6 +41,17 @@ app.add_middleware(
     same_site="none",
     https_only=True,
     )
+
+cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",") if origin.strip()]
+allow_all_origins = "*" in cors_origins
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if allow_all_origins else cors_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
     
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
