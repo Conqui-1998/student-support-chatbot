@@ -50,10 +50,10 @@
 			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
 			const data = await res.json();
 			if (data && data.exists && data.file_count > 0) {
-				status.textContent = `Module content ready: ${data.file_count} file(s)`;
+				status.textContent = `Module markdown ready: ${data.file_count} file(s)`;
 				status.classList.add("is-ready");
 			} else {
-				status.textContent = "No module content found yet";
+				status.textContent = "No module markdown found yet";
 				status.classList.add("is-empty");
 			}
 		} catch (err) {
