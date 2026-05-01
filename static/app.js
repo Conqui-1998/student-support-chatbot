@@ -130,9 +130,44 @@ function applyEmbeddedMode() {
 	try {
 		if (window.self !== window.top) {
 			document.body.classList.add("embedded-mode");
+			openWidget();
 		}
 	} catch (err) {
 		document.body.classList.add("embedded-mode");
+		openWidget();
+	}
+}
+
+function openWidget() {
+	const panel = document.getElementById("chatWidgetPanel");
+	const toggle = document.getElementById("widgetToggle");
+	if (panel) {
+		panel.classList.add("is-open");
+	}
+	if (toggle) {
+		toggle.setAttribute("aria-expanded", "true");
+	}
+}
+
+function closeWidget() {
+	const panel = document.getElementById("chatWidgetPanel");
+	const toggle = document.getElementById("widgetToggle");
+	if (panel) {
+		panel.classList.remove("is-open");
+	}
+	if (toggle) {
+		toggle.setAttribute("aria-expanded", "false");
+	}
+}
+
+function toggleWidget() {
+	const panel = document.getElementById("chatWidgetPanel");
+	if (!panel) return;
+	if (panel.classList.contains("is-open")) {
+		closeWidget();
+	}
+	else {
+		openWidget();
 	}
 }
 
@@ -203,6 +238,19 @@ document.addEventListener("DOMContentLoaded", function() {
 	const savedAccessibilityMode = localStorage.getItem("accessibilityMode") || "off";
 	applyAccessibilityMode(savedAccessibilityMode === "on");
 
+	const widgetToggle = document.getElementById("widgetToggle");
+	if (widgetToggle) {
+		widgetToggle.addEventListener("click", toggleWidget);
+	}
+
+	const widgetClose = document.getElementById("widgetClose");
+	if (widgetClose) {
+		widgetClose.addEventListener("click", closeWidget);
+	}
+
 	applyEmbeddedMode();
+	if (!document.body.classList.contains("embedded-mode")) {
+		openWidget();
+	}
 	setupFrameResizeObserver();
 });

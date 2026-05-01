@@ -2,60 +2,75 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Student Support Chatbot</title>
 	<link rel="stylesheet" href="/static/styles.css" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="chat-page">
-	<main class="container">
-		<div class="top-bar">
-			<div class="left-controls">
-				<a href="/admin" class="pill-button">Admin View</a>
-			</div>
-			<div class="center-controls">
-				<img src="/static/kent-logo.png" alt="University of Kent" class="logo" />
-				<h1>Student Support Chatbot</h1>
-			</div>
-			<div class="right-controls">
-				<button id="themeToggle" type="button">Dark Mode</button>
-				<button id="accessibilityToggle" type="button">Accessibility: Off</button>
-			</div>
-		</div>
-		
-		<p class="subtle-note">
-			Prototype chatbot - not an official university system
-		</p>
-		
-		<p class="note">
-			This chatbot provides guidance based on university support content. 
-			Please avoid sharing personal or sensitive information. Always check official sources for confirmation.
-		</p>
-		
-		<div id="chatBox" class="chat-box">
-			<div id="chatStarter" class="chat-starter">
-				<p class="starter-text">
-					Ask about admissions, assessments, deadlines, wellbeing, or general student support.
-				</p>
-				<div class="suggestions">
-					<button class="pill-button" onclick="askSuggestion('How do I apply for an extension?')">How do I apply for an extension?</button>
-					<button class="pill-button" onclick="askSuggestion('Where can I get wellbeing support?')">Where can I get wellbeing support?</button>
-					<button class="pill-button" onclick="askSuggestion('How do I contact admissions?')">How do I contact admissions?</button>
+	<div class="widget-launcher" id="widgetLauncher">
+		<button id="widgetToggle" class="widget-button" type="button" aria-expanded="false" aria-controls="chatWidgetPanel">
+			<span class="widget-button-icon"><i class="fa-solid fa-comments"></i></span>
+			<span class="widget-button-text">Chatbot</span>
+		</button>
+	</div>
+
+	<section class="chat-widget" id="chatWidgetPanel" aria-label="Student support chatbot">
+		<header class="widget-header">
+			<div class="widget-brand">
+				<img src="/static/kent-logo.png" alt="University of Kent" class="widget-logo" />
+				<div>
+					<h1>Student Support Chatbot</h1>
+					<p>Prototype chatbot - not an official university system</p>
 				</div>
 			</div>
-		</div>
-		
-		<div class="input-row">
-			<input id="messageInput" type="text" placeholder="Ask a student support question..." />
-			<span class="info-icon"> 
-				<i class="fa-solid fa-circle-info"></i>
-				<span class="tooltip-text">
-					Avoid sharing personal, medical, or identifying information.
+			<div class="widget-actions">
+				<a href="/admin" class="widget-icon-button" title="Admin view" aria-label="Admin view">
+					<i class="fa-solid fa-gear"></i>
+				</a>
+				<button id="themeToggle" class="widget-icon-button" type="button" aria-label="Toggle theme">
+					<i class="fa-solid fa-moon"></i>
+				</button>
+				<button id="accessibilityToggle" class="widget-icon-button" type="button" aria-label="Toggle accessibility mode">
+					<i class="fa-solid fa-universal-access"></i>
+				</button>
+				<button id="widgetClose" class="widget-icon-button" type="button" aria-label="Close chatbot">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</div>
+		</header>
+
+		<div class="widget-body">
+			<p class="note">
+				This chatbot provides guidance based on university support content. Please avoid sharing personal or sensitive information. Always check official sources for confirmation.
+			</p>
+
+			<div id="chatBox" class="chat-box">
+				<div id="chatStarter" class="chat-starter">
+					<p class="starter-text">
+						Ask about admissions, assessments, deadlines, wellbeing, or general student support.
+					</p>
+					<div class="suggestions">
+						<button class="pill-button" onclick="askSuggestion('How do I apply for an extension?')">How do I apply for an extension?</button>
+						<button class="pill-button" onclick="askSuggestion('Where can I get wellbeing support?')">Where can I get wellbeing support?</button>
+						<button class="pill-button" onclick="askSuggestion('How do I contact admissions?')">How do I contact admissions?</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="input-row">
+				<input id="messageInput" type="text" placeholder="Ask a student support question..." />
+				<span class="info-icon">
+					<i class="fa-solid fa-circle-info"></i>
+					<span class="tooltip-text">
+						Avoid sharing personal, medical, or identifying information.
+					</span>
 				</span>
-			</span>
-			<button class="send-button" onclick="sendMessage()">Send</button>
+				<button class="send-button" onclick="sendMessage()">Send</button>
+			</div>
 		</div>
-	</main>
-	
+	</section>
+
 	<script src="/static/app.js"></script>
 </body>
 </html>

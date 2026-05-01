@@ -12,153 +12,160 @@ body {
 .chat-page {
 	min-height: 100vh;
 	margin: 0;
-	overflow-x: hidden;
-	overflow-y: auto;
-	display: flex;
+	overflow: hidden;
 }
 
-/* LAYOUT / CONTAINERS */
-
-.container {
-	max-width: 850px;
-	margin: 0 auto;
+.widget-launcher {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 9998;
 	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.widget-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 18px;
+	border: 0;
+	border-radius: 999px;
+	background: #0f5ea8;
+	color: #ffffff;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: 0 10px 24px rgba(15, 94, 168, 0.25);
+}
+
+.widget-button:hover {
+	background: #0d4f8d;
+}
+
+.widget-button-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+}
+
+.widget-button-text {
+	font-size: 15px;
+}
+
+.chat-widget {
+	position: fixed;
+	right: 24px;
+	bottom: 84px;
+	z-index: 9999;
+	width: min(420px, calc(100vw - 48px));
+	max-height: min(720px, calc(100vh - 120px));
+	display: none;
 	flex-direction: column;
 	background: #E2DCEA;
-	padding: 18px 20px;
-	box-sizing: border-box;
-	border-radius: 12px;
-	width: 100%;
+	border-radius: 18px;
+	box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+	overflow: hidden;
 }
 
-.chat-page .container {
+.chat-widget.is-open {
+	display: flex;
+}
+
+.widget-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 16px 18px 12px;
+	background: #dcd1ea;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.widget-brand {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+.widget-logo {
+	width: 44px;
+	height: 44px;
+	object-fit: contain;
+	flex: 0 0 auto;
+}
+
+.widget-header h1 {
+	margin: 0;
+	font-size: 1.1rem;
+	line-height: 1.2;
+}
+
+.widget-header p {
+	margin: 4px 0 0;
+	font-size: 0.85rem;
+	color: #4a5568;
+}
+
+.widget-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.widget-icon-button {
+	width: 38px;
+	height: 38px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.74);
+	color: #111827;
+	cursor: pointer;
+	text-decoration: none;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.widget-icon-button:hover {
+	background: rgba(255, 255, 255, 0.92);
+}
+
+.widget-body {
+	display: flex;
+	flex-direction: column;
+	padding: 14px;
+	gap: 12px;
+	background: #f8f7fb;
+	min-height: 0;
+}
+
+.widget-body .note {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 1.35;
+}
+
+.widget-body .chat-box {
 	flex: 1;
-	min-height: 100vh;
+	min-height: 260px;
+	max-height: 420px;
+	margin: 0;
 }
 
-body.embedded-mode {
-	background: #f7f7f9;
+.widget-body .input-row {
+	margin-top: 0;
 }
 
-body.embedded-mode .container {
-	padding: 12px 14px;
-	border-radius: 10px;
-}
-
-body.embedded-mode .top-bar {
-	margin-bottom: 6px;
-}
-
-body.embedded-mode .center-controls .logo {
-	height: 26px;
-}
-
-body.embedded-mode .center-controls h1 {
-	font-size: 1.45rem;
-}
-
-body.embedded-mode .subtle-note,
-body.embedded-mode .note {
-	display: none;
-}
-
-body.embedded-mode .chat-box {
-	min-height: 140px;
-	margin-bottom: 10px;
-}
-
-body.embedded-mode .chat-starter {
-	padding: 10px;
-}
-
-body.embedded-mode .starter-text {
-	font-size: 0.92rem;
-}
-
-body.embedded-mode .input-row input,
-body.embedded-mode .send-button {
-	padding-top: 10px;
-	padding-bottom: 10px;
-}
-
-body.embedded-mode .pill-button {
+.widget-body .pill-button {
 	font-size: 13px;
 }
 
 .admin-container {
 	max-width: 1000px;
 	margin: 40px auto;
-}
-
-.logo {
-	height: 40px;
-}
-
-/* HEADER / NAVIGATION */
-
-.top-bar {
-	display: grid;
-	grid-template-columns: auto 1fr auto;
-	align-items: center;
-	margin-bottom: 10px;
-	gap: 12px;
-}
-
-.left-controls,
-.right-controls {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.center-controls {
-	text-align: center;
-}
-
-.center-controls .logo {
-	height: 34px;
-	display: block;
-	margin: 0 auto 4px;
-}
-
-.center-controls h1 {
-	margin: 0;
-	font-size: 2rem;
-	line-height: 1.05;
-}
-
-.top-nav {
-	margin-bottom: 16px;
-}
-
-.top-nav a {
-	text-decoration: none;
-	font-weight: bold;
-	color: #0056b3;
-}
-
-.top-nav a:hover {
-	text-decoration: underline;
-}
-
-#themeToggle {
-	padding: 8px 12px;
-	border-radius: 6px;
-	border: 1px solid #ccc;
-	background: transparent;
-}
-
-/* TEXT / NOTES */
-
-.subtle-note {
-	margin: 4px 0 6px;
-	font-size: 0.95rem;
-}
-
-.note {
-	margin: 0 0 12px;
-	font-size: 0.95rem;
-	line-height: 1.35;
 }
 
 .meta {
