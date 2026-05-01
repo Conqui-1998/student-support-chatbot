@@ -3,9 +3,26 @@
 	const STYLE_ID = "student-support-chatbot-widget-styles";
 	const SCRIPT_SRC = document.currentScript && document.currentScript.src ? document.currentScript.src : "";
 	const SCRIPT_BASE = SCRIPT_SRC ? new URL(".", SCRIPT_SRC).href : "https://prototype-student-support-chatbot.onrender.com/static/";
+	const SCRIPT_TAG = document.currentScript;
 
 	function assetUrl(path) {
 		return new URL(path, SCRIPT_BASE).href;
+	}
+
+	function shouldInit() {
+		const pageContains = SCRIPT_TAG && SCRIPT_TAG.getAttribute("data-page-contains");
+		const pageEquals = SCRIPT_TAG && SCRIPT_TAG.getAttribute("data-page-equals");
+		const pathname = window.location.pathname + window.location.search;
+
+		if (pageContains && !pathname.includes(pageContains)) {
+			return false;
+		}
+
+		if (pageEquals && pathname !== pageEquals) {
+			return false;
+		}
+
+		return true;
 	}
 
 	function ensureStylesheet() {
@@ -213,6 +230,8 @@
 	}
 
 	function init() {
+		if (!shouldInit()) return;
+
 		ensureStylesheet();
 
 		const existing = document.getElementById(WIDGET_ID);
