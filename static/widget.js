@@ -1,6 +1,12 @@
 (function () {
 	const WIDGET_ID = "student-support-chatbot-widget";
 	const STYLE_ID = "student-support-chatbot-widget-styles";
+	const SCRIPT_SRC = document.currentScript && document.currentScript.src ? document.currentScript.src : "";
+	const SCRIPT_BASE = SCRIPT_SRC ? new URL(".", SCRIPT_SRC).href : "https://prototype-student-support-chatbot.onrender.com/static/";
+
+	function assetUrl(path) {
+		return new URL(path, SCRIPT_BASE).href;
+	}
 
 	function ensureStylesheet() {
 		if (document.getElementById(STYLE_ID)) return;
@@ -8,7 +14,7 @@
 		const link = document.createElement("link");
 		link.id = STYLE_ID;
 		link.rel = "stylesheet";
-		link.href = "/static/styles.css";
+		link.href = assetUrl("styles.css");
 		document.head.appendChild(link);
 	}
 
@@ -24,7 +30,7 @@
 			<section class="chat-widget is-open" id="chatWidgetPanel" aria-label="Student support chatbot">
 				<header class="widget-header">
 					<div class="widget-brand">
-						<img src="/static/kent-logo.png" alt="University of Kent" class="widget-logo" />
+						<img src="${assetUrl("kent-logo.png")}" alt="University of Kent" class="widget-logo" />
 						<div>
 							<h1>Student Support Chatbot</h1>
 							<p>Prototype chatbot - not an official university system</p>
