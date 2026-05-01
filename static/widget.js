@@ -6,6 +6,7 @@
 	const API_BASE = SCRIPT_SRC ? new URL(".", SCRIPT_SRC).origin : "https://prototype-student-support-chatbot.onrender.com";
 	const SCRIPT_TAG = document.currentScript;
 	const MODULE_KEY = SCRIPT_TAG ? (SCRIPT_TAG.getAttribute("data-module-key") || "") : "";
+	const DEBUG_STATUS = SCRIPT_TAG ? (SCRIPT_TAG.getAttribute("data-debug-status") || "") : "";
 
 	function assetUrl(path) {
 		return new URL(path, SCRIPT_BASE).href;
@@ -35,6 +36,30 @@
 		link.rel = "stylesheet";
 		link.href = assetUrl("styles.css");
 		document.head.appendChild(link);
+	}
+
+	async function renderStatusPill(root) {
+		if (!DEBUG_STATUS || !MODULE_KEY) return;
+
+		const status = document.createElement("div");
+		status.className = "widget-status-pill";
+		status.textContent = "Checking module content...";
+		root.querySelector(".widget-header").appendChild(status);
+
+		try {
+			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
+			const data = await res.json();
+			if (data && data.exists && data.file_count > 0) {
+				status.textContent = `Module content ready: ${data.file_count} file(s)`;
+				status.classList.add("is-ready");
+			} else {
+				status.textContent = "No module content found yet";
+				status.classList.add("is-empty");
+			}
+		} catch (err) {
+			status.textContent = "Module status unavailable";
+			status.classList.add("is-error");
+		}
 	}
 
 	function createHtml() {
@@ -272,6 +297,7 @@
 
 		applyTheme(localStorage.getItem("theme") || "light");
 		applyAccessibilityMode(localStorage.getItem("accessibilityMode") === "on");
+		renderStatusPill(root);
 	}
 
 	if (document.readyState === "loading") {

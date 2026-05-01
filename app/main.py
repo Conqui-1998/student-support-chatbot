@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
@@ -10,6 +11,7 @@ import os
 
 from app.models import ChatRequest, ChatResponse, SourceItem
 from app.rag import search, build_index
+from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
@@ -87,6 +89,31 @@ def startup_event():
 @app.get("/")
 def serve_ui():
     return FileResponse("static/index.html")
+
+@app.get("/module-status/{module_key}")
+def module_status(module_key: str):
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return JSONResponse({"ok": False, "error": "invalid module key"}, status_code=400)
+
+    module_dir = DATA_MODULES_DIR / safe_key
+    files = []
+    if module_dir.exists():
+        for path in sorted(module_dir.glob("*.md")):
+            files.append({
+                "name": path.name,
+                "exists": True,
+                "size": path.stat().st_size,
+            })
+
+    return {
+        "ok": True,
+        "module_key": safe_key,
+        "module_dir": str(module_dir),
+        "exists": module_dir.exists(),
+        "files": files,
+        "file_count": len(files),
+    }
     
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
