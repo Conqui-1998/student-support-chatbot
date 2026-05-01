@@ -36,6 +36,70 @@ body {
 	min-height: 100vh;
 }
 
+body.embedded-mode {
+	background: #f7f7f9;
+}
+
+body.embedded-mode .container {
+	padding: 12px 14px;
+	border-radius: 10px;
+}
+
+body.embedded-mode .top-bar {
+	margin-bottom: 6px;
+}
+
+body.embedded-mode .center-controls .logo {
+	height: 26px;
+}
+
+body.embedded-mode .center-controls h1 {
+	font-size: 1.45rem;
+}
+
+body.embedded-mode .subtle-note,
+body.embedded-mode .note {
+	display: none;
+}
+
+body.embedded-mode .chat-box {
+	min-height: 140px;
+	margin-bottom: 10px;
+}
+
+body.embedded-mode .chat-starter {
+	padding: 10px;
+}
+
+body.embedded-mode .starter-text {
+	font-size: 0.92rem;
+}
+
+body.embedded-mode .input-row input,
+body.embedded-mode .send-button {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+body.embedded-mode .pill-button {
+	font-size: 13px;
+}
+
+.embed-debug-badge {
+	position: fixed;
+	right: 8px;
+	bottom: 8px;
+	z-index: 9999;
+	background: rgba(17, 24, 39, 0.92);
+	color: #ffffff;
+	font-size: 11px;
+	line-height: 1;
+	padding: 6px 8px;
+	border-radius: 999px;
+	pointer-events: none;
+	letter-spacing: 0;
+}
+
 .admin-container {
 	max-width: 1000px;
 	margin: 40px auto;

@@ -92,9 +92,11 @@ function sendFrameResize(height) {
 	});
 
 	try {
+		console.debug("[chatbot] sending frame resize", Math.ceil(height));
 		window.parent.postMessage(message, "*");
 	} catch (err) {
 		// Ignore if the tool is not embedded or the host blocks messaging.
+		console.debug("[chatbot] frame resize blocked", err);
 	}
 }
 
@@ -112,18 +114,54 @@ function requestFrameResize() {
 
 function setupFrameResizeObserver() {
 	requestFrameResize();
+	addDebugBadge();
 
 	if (typeof ResizeObserver !== "undefined") {
 		const observer = new ResizeObserver(() => {
 			requestFrameResize();
+			addDebugBadge();
 		});
 		observer.observe(document.body);
 	}
 
 	window.addEventListener("load", requestFrameResize);
 	window.addEventListener("resize", requestFrameResize);
+	window.addEventListener("load", addDebugBadge);
+	window.addEventListener("resize", addDebugBadge);
 	setTimeout(requestFrameResize, 250);
 	setTimeout(requestFrameResize, 1000);
+	setTimeout(addDebugBadge, 250);
+	setTimeout(addDebugBadge, 1000);
+}
+
+function applyEmbeddedMode() {
+	try {
+		if (window.self !== window.top) {
+			document.body.classList.add("embedded-mode");
+			document.body.setAttribute("data-embed-status", "embedded");
+			console.debug("[chatbot] embedded mode detected");
+		}
+	} catch (err) {
+		document.body.classList.add("embedded-mode");
+		document.body.setAttribute("data-embed-status", "embedded");
+		console.debug("[chatbot] embedded mode detected via cross-origin fallback");
+	}
+}
+
+function addDebugBadge() {
+	let badge = document.getElementById("embedDebugBadge");
+	if (!badge) {
+		badge = document.createElement("div");
+		badge.id = "embedDebugBadge";
+		badge.className = "embed-debug-badge";
+		document.body.appendChild(badge);
+	}
+
+	const embedded = document.body.classList.contains("embedded-mode");
+	const height = getDocumentHeight();
+	badge.textContent = embedded
+		? `EMBED MODE | height ${height}px | resize active`
+		: `STANDALONE MODE | height ${height}px`;
 }
 
 function applyTheme(theme) {
@@ -193,5 +231,6 @@ document.addEventListener("DOMContentLoaded", function() {
 	const savedAccessibilityMode = localStorage.getItem("accessibilityMode") || "off";
 	applyAccessibilityMode(savedAccessibilityMode === "on");
 
+	applyEmbeddedMode();
 	setupFrameResizeObserver();
 });
