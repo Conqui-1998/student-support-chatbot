@@ -39,26 +39,77 @@
 	}
 
 	async function renderStatusPill(root) {
-		if (!DEBUG_STATUS || !MODULE_KEY) return;
+		if (!MODULE_KEY) return;
 
 		const status = document.createElement("div");
 		status.className = "widget-status-pill";
-		status.textContent = "Checking module content...";
+		status.textContent = "Checking Moodle module...";
 		root.querySelector(".widget-header").appendChild(status);
 
 		try {
 			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
 			const data = await res.json();
-			if (data && data.exists && data.file_count > 0) {
-				status.textContent = `Module markdown ready: ${data.file_count} file(s)`;
-				status.classList.add("is-ready");
+			if (data && data.ok) {
+				const courseText = data.course_id ? `course ${data.course_id}` : "no course mapping";
+				if (data.exists && data.file_count > 0) {
+					status.textContent = `Moodle sync ready: ${courseText}, ${data.file_count} file(s)`;
+					status.classList.add("is-ready");
+				} else {
+					status.textContent = `Moodle sync missing: ${courseText}`;
+					status.classList.add("is-empty");
+				}
+				if (!data.moodle_access) {
+					status.textContent += " (Moodle access off)";
+					status.classList.add("is-error");
+				}
 			} else {
-				status.textContent = "No module markdown found yet";
-				status.classList.add("is-empty");
+				status.textContent = "Module status unavailable";
+				status.classList.add("is-error");
 			}
 		} catch (err) {
 			status.textContent = "Module status unavailable";
 			status.classList.add("is-error");
+		}
+	}
+
+	function createStatusDetail(root) {
+		let detail = root.querySelector(".widget-status-detail");
+		if (!detail) {
+			detail = document.createElement("div");
+			detail.className = "widget-status-detail";
+			root.querySelector(".widget-body").insertBefore(detail, root.querySelector(".note"));
+		}
+		return detail;
+	}
+
+	async function renderStatusDetail(root) {
+		if (!MODULE_KEY) return;
+		const detail = createStatusDetail(root);
+		detail.textContent = "Loading Moodle module status...";
+
+		try {
+			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
+			const data = await res.json();
+			if (data && data.ok) {
+				const parts = [
+					`module_key=${data.module_key}`,
+					`course_id=${data.course_id ?? "none"}`,
+					`files=${data.file_count}`,
+					`moodle_access=${data.moodle_access ? "yes" : "no"}`
+				];
+				detail.textContent = parts.join(" | ");
+				if (!data.exists || data.file_count === 0) {
+					detail.classList.add("is-empty");
+				} else {
+					detail.classList.add("is-ready");
+				}
+			} else {
+				detail.textContent = "Module status unavailable";
+				detail.classList.add("is-error");
+			}
+		} catch (err) {
+			detail.textContent = "Module status unavailable";
+			detail.classList.add("is-error");
 		}
 	}
 
@@ -298,6 +349,7 @@
 		applyTheme(localStorage.getItem("theme") || "light");
 		applyAccessibilityMode(localStorage.getItem("accessibilityMode") === "on");
 		renderStatusPill(root);
+		renderStatusDetail(root);
 	}
 
 	if (document.readyState === "loading") {

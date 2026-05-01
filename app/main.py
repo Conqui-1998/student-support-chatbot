@@ -11,7 +11,7 @@ import os
 
 from app.models import ChatRequest, ChatResponse, SourceItem
 from app.rag import search, build_index
-from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR
+from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR, resolve_course_id, has_moodle_access
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
@@ -109,6 +109,8 @@ def module_status(module_key: str):
     return {
         "ok": True,
         "module_key": safe_key,
+        "course_id": resolve_course_id(safe_key),
+        "moodle_access": has_moodle_access(),
         "module_dir": str(module_dir),
         "exists": module_dir.exists(),
         "files": files,
