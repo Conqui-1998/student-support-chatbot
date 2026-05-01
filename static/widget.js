@@ -21,18 +21,18 @@
 	function createHtml() {
 		return `
 			<div class="widget-launcher">
-				<button id="widgetToggle" class="widget-button" type="button" aria-expanded="true" aria-controls="chatWidgetPanel">
+				<button id="widgetToggle" class="widget-button" type="button" aria-expanded="false" aria-controls="chatWidgetPanel">
 					<span class="widget-button-icon"><i class="fa-solid fa-comments"></i></span>
-					<span class="widget-button-text">Chatbot</span>
+					<span class="widget-button-text">Module Assistant</span>
 				</button>
 			</div>
 
-			<section class="chat-widget is-open" id="chatWidgetPanel" aria-label="Student support chatbot">
+			<section class="chat-widget" id="chatWidgetPanel" aria-label="Student support chatbot">
 				<header class="widget-header">
 					<div class="widget-brand">
 						<img src="${assetUrl("kent-logo.png")}" alt="University of Kent" class="widget-logo" />
 						<div>
-							<h1>Student Support Chatbot</h1>
+							<h1>Module Assistant</h1>
 							<p>Prototype chatbot - not an official university system</p>
 						</div>
 					</div>
@@ -248,7 +248,6 @@
 
 		applyTheme(localStorage.getItem("theme") || "light");
 		applyAccessibilityMode(localStorage.getItem("accessibilityMode") === "on");
-		openWidget();
 	}
 
 	if (document.readyState === "loading") {
