@@ -3,7 +3,9 @@
 	const STYLE_ID = "student-support-chatbot-widget-styles";
 	const SCRIPT_SRC = document.currentScript && document.currentScript.src ? document.currentScript.src : "";
 	const SCRIPT_BASE = SCRIPT_SRC ? new URL(".", SCRIPT_SRC).href : "https://prototype-student-support-chatbot.onrender.com/static/";
+	const API_BASE = SCRIPT_SRC ? new URL(".", SCRIPT_SRC).origin : "https://prototype-student-support-chatbot.onrender.com";
 	const SCRIPT_TAG = document.currentScript;
+	const MODULE_KEY = SCRIPT_TAG ? (SCRIPT_TAG.getAttribute("data-module-key") || "") : "";
 
 	function assetUrl(path) {
 		return new URL(path, SCRIPT_BASE).href;
@@ -127,10 +129,13 @@
 		chatBox.innerHTML += `<div class="msg user"><strong>You:</strong> ${escapeHtml(message)}</div>`;
 		input.value = "";
 
-		const res = await fetch("/chat", {
+		const res = await fetch(new URL("/chat", API_BASE).href, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ message })
+			body: JSON.stringify({
+				message,
+				module_key: MODULE_KEY || null
+			})
 		});
 
 		const data = await res.json();

@@ -115,6 +115,7 @@ def admin_page(request: Request):
 def chat(req: ChatRequest):
 
     query = req.message.strip()
+    module_key = req.module_key
     category = classify_query(query)
     sensitive = is_sensitive_query(query)
     
@@ -129,7 +130,7 @@ def chat(req: ChatRequest):
         })
         return wellbeing_response()
         
-    retrieved = search(query)
+    retrieved = search(query, module_key=module_key)
     
     if not retrieved:
         add_log({

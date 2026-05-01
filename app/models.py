@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class ChatRequest(BaseModel):
-    message:str
+    message: str
+    module_key: Optional[str] = None
     
 class SourceItem(BaseModel):
     title: str
