@@ -48,6 +48,7 @@ async function sendMessage(prefill = null) {
 		`;
 		
 		chatBox.scrollTop = chatBox.scrollHeight;
+		requestFrameResize();
 	}
 	
 	
@@ -72,6 +73,57 @@ function hideChatStarter() {
 	if (starter) {
 		starter.style.display = "none";
 	}
+}
+
+function getDocumentHeight() {
+	return Math.max(
+		document.body.scrollHeight,
+		document.documentElement.scrollHeight,
+		document.body.offsetHeight,
+		document.documentElement.offsetHeight,
+		document.documentElement.clientHeight
+	);
+}
+
+function sendFrameResize(height) {
+	const message = JSON.stringify({
+		subject: "lti.frameResize",
+		height: Math.ceil(height)
+	});
+
+	try {
+		window.parent.postMessage(message, "*");
+	} catch (err) {
+		// Ignore if the tool is not embedded or the host blocks messaging.
+	}
+}
+
+let resizeTimer = null;
+
+function requestFrameResize() {
+	if (resizeTimer) {
+		clearTimeout(resizeTimer);
+	}
+
+	resizeTimer = setTimeout(() => {
+		sendFrameResize(getDocumentHeight());
+	}, 50);
+}
+
+function setupFrameResizeObserver() {
+	requestFrameResize();
+
+	if (typeof ResizeObserver !== "undefined") {
+		const observer = new ResizeObserver(() => {
+			requestFrameResize();
+		});
+		observer.observe(document.body);
+	}
+
+	window.addEventListener("load", requestFrameResize);
+	window.addEventListener("resize", requestFrameResize);
+	setTimeout(requestFrameResize, 250);
+	setTimeout(requestFrameResize, 1000);
 }
 
 function applyTheme(theme) {
@@ -140,4 +192,6 @@ document.addEventListener("DOMContentLoaded", function() {
 	}	
 	const savedAccessibilityMode = localStorage.getItem("accessibilityMode") || "off";
 	applyAccessibilityMode(savedAccessibilityMode === "on");
+
+	setupFrameResizeObserver();
 });

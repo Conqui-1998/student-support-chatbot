@@ -14,6 +14,7 @@ body {
 	margin: 0;
 	overflow-x: hidden;
 	overflow-y: auto;
+	display: flex;
 }
 
 /* LAYOUT / CONTAINERS */
@@ -24,15 +25,15 @@ body {
 	display: flex;
 	flex-direction: column;
 	background: #E2DCEA;
-	padding: 24px;
+	padding: 18px 20px;
 	box-sizing: border-box;
 	border-radius: 12px;
+	width: 100%;
 }
 
 .chat-page .container {
+	flex: 1;
 	min-height: 100vh;
-	display: flex;
-	flex-direction: column;
 }
 
 .admin-container {
@@ -50,7 +51,8 @@ body {
 	display: grid;
 	grid-template-columns: auto 1fr auto;
 	align-items: center;
-	margin-bottom: 16px;
+	margin-bottom: 10px;
+	gap: 12px;
 }
 
 .left-controls,
@@ -65,13 +67,15 @@ body {
 }
 
 .center-controls .logo {
-	height: 40px;
+	height: 34px;
 	display: block;
 	margin: 0 auto 4px;
 }
 
 .center-controls h1 {
 	margin: 0;
+	font-size: 2rem;
+	line-height: 1.05;
 }
 
 .top-nav {
@@ -98,7 +102,14 @@ body {
 /* TEXT / NOTES */
 
 .subtle-note {
-	margin-top: 8px;
+	margin: 4px 0 6px;
+	font-size: 0.95rem;
+}
+
+.note {
+	margin: 0 0 12px;
+	font-size: 0.95rem;
+	line-height: 1.35;
 }
 
 .meta {
@@ -139,11 +150,11 @@ body {
 	overflow-y: auto;
 	overflow-x: hidden;
 	max-height: 100%;
-	min-height: 320px;
+	min-height: 220px;
 	border: 1px solid #ddd;
 	border-radius: 10px;
-	padding: 16px;
-	margin: 20px 0;
+	padding: 14px;
+	margin: 0 0 12px;
 	background: #fafafa;
 }
 
@@ -154,15 +165,16 @@ body {
 	justify-content: flex-start;
 	min-height: 100%;
 	text-align: center;
-	padding: 24px 12px;
+	padding: 18px 12px;
 	box-sizing: border-box;
 	border-radius: 12px;
 }
 
 .starter-text {
-	margin-bottom: 16px;
+	margin: 0 0 12px;
 	color: #444;
 	max-width: 600px;
+	font-size: 0.98rem;
 }
 
 /*MESSAGES */
@@ -213,12 +225,13 @@ body {
 	display: flex;
 	gap: 10px;
 	align-items: center;
+	margin-top: auto;
 }
 
 .input-row input {
 	flex: 1;
-	padding: 14px 16px;
-	font-size: 16px;
+	padding: 12px 14px;
+	font-size: 15px;
 	border: 1.5px solid #6F5097;
 	border-radius: 12px;
 	background: #ffffff;
@@ -237,7 +250,7 @@ body {
 }
 
 .send-button {
-	padding: 14px 18px;
+	padding: 12px 16px;
 	border: 1.5px;
 	border-radius: 12px;
 	background: #f3edf7;
@@ -300,8 +313,50 @@ body {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 12px;
-	margin-top: 12px;
+	gap: 10px;
+	margin-top: 8px;
+}
+
+@media (max-height: 760px) {
+	.container {
+		padding: 14px 16px;
+	}
+
+	.top-bar {
+		margin-bottom: 8px;
+	}
+
+	.center-controls .logo {
+		height: 30px;
+	}
+
+	.center-controls h1 {
+		font-size: 1.65rem;
+	}
+
+	.subtle-note,
+	.note {
+		font-size: 0.9rem;
+	}
+
+	.chat-box {
+		min-height: 160px;
+		margin-bottom: 10px;
+	}
+
+	.chat-starter {
+		padding: 14px 10px;
+	}
+
+	.starter-text {
+		margin-bottom: 10px;
+	}
+
+	.input-row input,
+	.send-button {
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
 }
 
 /* ADMIN VIEW */
