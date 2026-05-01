@@ -85,21 +85,6 @@ body.embedded-mode .pill-button {
 	font-size: 13px;
 }
 
-.embed-debug-badge {
-	position: fixed;
-	right: 8px;
-	bottom: 8px;
-	z-index: 9999;
-	background: rgba(17, 24, 39, 0.92);
-	color: #ffffff;
-	font-size: 11px;
-	line-height: 1;
-	padding: 6px 8px;
-	border-radius: 999px;
-	pointer-events: none;
-	letter-spacing: 0;
-}
-
 .admin-container {
 	max-width: 1000px;
 	margin: 40px auto;
