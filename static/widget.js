@@ -194,7 +194,7 @@
 							<div class="suggestions">
 								<button class="pill-button" data-suggestion="How should I prepare for my next seminar?">How should I prepare for my next seminar?</button>
 								<button class="pill-button" data-suggestion="Where can I find next week's essential reading?">Where can I find next week's essential reading?</button>
-								<button class="pill-button" data-suggestion="Could you give me a study plan to prepare for my next assignment?"Could you give me a study plan to prepare for my next assignment?</button>
+								<button class="pill-button" data-suggestion="Could you give me a study plan to prepare for my next assignment?">Could you give me a study plan to prepare for my next assignment?</button>
 								<button class="pill-button" data-suggestion="Could you summarise the essay marking criteria?">Could you summarise the essay marking criteria?</button>
 							</div>
 						</div>

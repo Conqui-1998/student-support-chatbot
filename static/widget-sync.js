@@ -197,12 +197,13 @@
 					<div id="chatBox" class="chat-box">
 						<div id="chatStarter" class="chat-starter">
 							<p class="starter-text">
-								Ask about admissions, assessments, deadlines, wellbeing, or general student support.
+								You can ask me for any administrative information and guidance pertaining to this module.
 							</p>
 							<div class="suggestions">
-								<button class="pill-button" data-suggestion="How do I apply for an extension?">How do I apply for an extension?</button>
-								<button class="pill-button" data-suggestion="Where can I get wellbeing support?">Where can I get wellbeing support?</button>
-								<button class="pill-button" data-suggestion="How do I contact admissions?">How do I contact admissions?</button>
+								<button class="pill-button" data-suggestion="How should I prepare for my next seminar?">How should I prepare for my next seminar?</button>
+								<button class="pill-button" data-suggestion="Where can I find next week's essential reading?">Where can I find next week's essential reading?</button>
+								<button class="pill-button" data-suggestion="Could you give me a study plan to prepare for my next assignment?">Could you give me a study plan to prepare for my next assignment?</button>
+								<button class="pill-button" data-suggestion="Could you summarise the essay marking criteria?">Could you summarise the essay marking criteria?</button>
 							</div>
 						</div>
 					</div>
