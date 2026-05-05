@@ -7,6 +7,7 @@
 	const SCRIPT_TAG = document.currentScript;
 	const MODULE_KEY = SCRIPT_TAG ? (SCRIPT_TAG.getAttribute("data-module-key") || "") : "";
 	const DEBUG_STATUS = SCRIPT_TAG ? (SCRIPT_TAG.getAttribute("data-debug-status") || "") : "";
+	const DEBUG_PANEL_ID = "student-support-chatbot-debug-panel";
 
 	function assetUrl(path) {
 		return new URL(path, SCRIPT_BASE).href;
@@ -156,6 +157,48 @@
 			banner.textContent = "Module sync status unavailable";
 			banner.className = "module-status-banner is-error";
 		}
+	}
+
+	function createDebugPanel() {
+		let panel = document.getElementById(DEBUG_PANEL_ID);
+		if (panel) return panel;
+
+		panel = document.createElement("aside");
+		panel.id = DEBUG_PANEL_ID;
+		panel.className = "moodle-debug-panel";
+		panel.innerHTML = `
+			<div class="moodle-debug-panel-header">
+				<strong>Moodle context</strong>
+				<span>debug</span>
+			</div>
+			<pre class="moodle-debug-panel-body">Loading context...</pre>
+		`;
+		document.body.appendChild(panel);
+		return panel;
+	}
+
+	function renderDebugPanel() {
+		if (DEBUG_STATUS !== "true") return;
+
+		const panel = createDebugPanel();
+		const body = panel.querySelector(".moodle-debug-panel-body");
+		const headings = Array.from(document.querySelectorAll("h1, h2, h3"))
+			.map((el) => el.textContent.trim())
+			.filter(Boolean)
+			.slice(0, 12);
+		const pageClasses = Array.from(document.body.classList).join(" ");
+		const data = {
+			url: window.location.href,
+			title: document.title,
+			body_classes: pageClasses || "(none)",
+			headings: headings.length ? headings : ["(none found)"],
+			module_key: MODULE_KEY || "(none)",
+			script_src: SCRIPT_TAG && SCRIPT_TAG.src ? SCRIPT_TAG.src : "(unknown)",
+			window_M: typeof window.M !== "undefined",
+			window_Moodle: typeof window.Moodle !== "undefined",
+			window_requirejs: typeof window.requirejs !== "undefined"
+		};
+		body.textContent = JSON.stringify(data, null, 2);
 	}
 
 	function createHtml() {
@@ -395,6 +438,7 @@
 		renderStatusPill(root);
 		renderStatusDetail(root);
 		renderModuleBanner(root);
+		renderDebugPanel();
 	}
 
 	if (document.readyState === "loading") {

@@ -39,7 +39,7 @@ Preview_Length = 220
 templates = Jinja2Templates(directory="app/templates")
 load_dotenv()
 
-app = FastAPI(title="Student Support Chatbot")
+app = FastAPI(title="Module Support Chatbot")
 
 MOODLE_ISSUER = os.getenv("MOODLE_ISSUER")
 MOODLE_CLIENT_ID = os.getenv("MOODLE_CLIENT_ID")
