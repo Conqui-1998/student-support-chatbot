@@ -12,3 +12,6 @@ httpx
 python-multipart
 authlib
 itsdangerous
+pypdf
+python-docx
+python-pptx

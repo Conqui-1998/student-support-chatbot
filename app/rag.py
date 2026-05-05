@@ -6,6 +6,21 @@ from dotenv import load_dotenv
 import re
 from app.moodle_sync import has_moodle_access
 
+try:
+    from pypdf import PdfReader
+except Exception:  # pragma: no cover - optional dependency
+    PdfReader = None
+
+try:
+    from docx import Document
+except Exception:  # pragma: no cover - optional dependency
+    Document = None
+
+try:
+    from pptx import Presentation
+except Exception:  # pragma: no cover - optional dependency
+    Presentation = None
+
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -20,6 +35,8 @@ documents = []
 index = None
 module_documents = {}
 module_indexes = {}
+
+SUPPORTED_EXTENSIONS = {".md", ".pdf", ".docx", ".pptx"}
 
 def parse_markdown_file(path: str):
     with open(path, "r", encoding="utf-8") as f:
@@ -58,6 +75,82 @@ def parse_markdown_file(path: str):
         "content": content
     }
 
+
+def parse_pdf_file(path: str):
+    if PdfReader is None:
+        raise RuntimeError("pypdf is not installed")
+
+    reader = PdfReader(path)
+    pages = []
+    for page in reader.pages:
+        text = page.extract_text() or ""
+        if text.strip():
+            pages.append(text.strip())
+
+    return {
+        "title": os.path.basename(path),
+        "url": None,
+        "category": "pdf",
+        "content": "\n\n".join(pages).strip(),
+    }
+
+
+def parse_docx_file(path: str):
+    if Document is None:
+        raise RuntimeError("python-docx is not installed")
+
+    doc = Document(path)
+    paragraphs = []
+    for paragraph in doc.paragraphs:
+        text = paragraph.text.strip()
+        if text:
+            paragraphs.append(text)
+
+    return {
+        "title": os.path.basename(path),
+        "url": None,
+        "category": "docx",
+        "content": "\n\n".join(paragraphs).strip(),
+    }
+
+
+def parse_pptx_file(path: str):
+    if Presentation is None:
+        raise RuntimeError("python-pptx is not installed")
+
+    pres = Presentation(path)
+    slides = []
+    for slide_num, slide in enumerate(pres.slides, start=1):
+        parts = []
+        for shape in slide.shapes:
+            if hasattr(shape, "text") and shape.text:
+                text = shape.text.strip()
+                if text:
+                    parts.append(text)
+        slide_text = "\n".join(parts).strip()
+        if slide_text:
+            slides.append(f"Slide {slide_num}\n{slide_text}")
+
+    return {
+        "title": os.path.basename(path),
+        "url": None,
+        "category": "pptx",
+        "content": "\n\n".join(slides).strip(),
+    }
+
+
+def parse_document_file(path: str):
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".md":
+        return parse_markdown_file(path)
+    if ext == ".pdf":
+        return parse_pdf_file(path)
+    if ext == ".docx":
+        return parse_docx_file(path)
+    if ext == ".pptx":
+        return parse_pptx_file(path)
+    return None
+
 def load_documents():
     docs = []
     if not os.path.isdir(Data_Dir):
@@ -65,9 +158,10 @@ def load_documents():
 
     for filename in os.listdir(Data_Dir):
         path = os.path.join(Data_Dir, filename)
-        if os.path.isfile(path) and filename.endswith(".md"):
-            parsed = parse_markdown_file(path)
-            docs.extend(chunk_text(parsed))
+        if os.path.isfile(path) and os.path.splitext(filename)[1].lower() in SUPPORTED_EXTENSIONS:
+            parsed = parse_document_file(path)
+            if parsed and parsed.get("content"):
+                docs.extend(chunk_text(parsed))
     return docs
 
 def sanitize_module_key(module_key: str):
@@ -88,9 +182,10 @@ def load_module_documents(module_key: str):
     docs = []
     for filename in os.listdir(module_dir):
         path = os.path.join(module_dir, filename)
-        if os.path.isfile(path) and filename.endswith(".md"):
-            parsed = parse_markdown_file(path)
-            docs.extend(chunk_text(parsed))
+        if os.path.isfile(path) and os.path.splitext(filename)[1].lower() in SUPPORTED_EXTENSIONS:
+            parsed = parse_document_file(path)
+            if parsed and parsed.get("content"):
+                docs.extend(chunk_text(parsed))
     return docs
     
 def chunk_text(doc: dict, chunk_size: int = Chunk_Size):
