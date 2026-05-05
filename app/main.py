@@ -22,8 +22,9 @@ from app.moodle_sync import (
     debug_sync_module_from_moodle,
     write_module_markdown,
     get_module_access_rows,
-    is_module_enabled,
-    set_module_enabled,
+    list_module_files,
+    save_module_file_access,
+    load_module_file_access,
 )
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
@@ -124,7 +125,7 @@ def module_status(module_key: str):
         "module_key": safe_key,
         "course_id": resolve_course_id(safe_key),
         "moodle_access": has_moodle_access(),
-        "enabled": is_module_enabled(safe_key),
+        "enabled": True,
         "last_sync": LAST_SYNC_STATE,
         "module_dir": str(module_dir),
         "exists": module_dir.exists(),
@@ -208,13 +209,24 @@ def admin_page(request: Request, module_key: str | None = None):
             </td>
         </tr>
         """
+    safe_module_key = sanitize_module_key(module_key) if module_key else None
+    module_files = list_module_files(safe_module_key) if safe_module_key else []
+    enabled_files = set(load_module_file_access(safe_module_key).get("enabled_files", [])) if safe_module_key else set()
+
     return templates.TemplateResponse(
         request=request,
         name="admin.html",
         context={
             "rows": rows,
-            "module": get_module_access_rows(module_key)[0] if get_module_access_rows(module_key) else None,
-            "module_key": module_key,
+            "module_key": safe_module_key,
+            "module_files": [
+                {
+                    "name": f["name"],
+                    "size": f["size"],
+                    "enabled": f["name"] in enabled_files if enabled_files else True,
+                }
+                for f in module_files
+            ],
         }
     )
 
@@ -222,8 +234,8 @@ def admin_page(request: Request, module_key: str | None = None):
 async def admin_modules(request: Request):
     form = await request.form()
     module_key = form.get("module_key")
-    enabled = form.get("enabled") == "on"
-    set_module_enabled(module_key, enabled)
+    enabled_files = form.getlist("enabled_files")
+    save_module_file_access(module_key, enabled_files)
     redirect_target = f"/admin?module_key={module_key}" if module_key else "/admin"
     return RedirectResponse(redirect_target, status_code=303)
     

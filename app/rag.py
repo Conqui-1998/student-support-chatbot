@@ -4,7 +4,7 @@ import numpy as np
 from openai import OpenAI
 from dotenv import load_dotenv
 import re
-from app.moodle_sync import has_moodle_access, is_module_enabled
+from app.moodle_sync import load_module_file_access
 
 try:
     from pypdf import PdfReader
@@ -179,13 +179,24 @@ def load_module_documents(module_key: str):
     if not os.path.isdir(module_dir):
         return []
 
-    docs = []
+    access = load_module_file_access(module_key)
+    enabled_files = set(access.get("enabled_files", []))
+    all_files = []
     for filename in os.listdir(module_dir):
         path = os.path.join(module_dir, filename)
         if os.path.isfile(path) and os.path.splitext(filename)[1].lower() in SUPPORTED_EXTENSIONS:
-            parsed = parse_document_file(path)
-            if parsed and parsed.get("content"):
-                docs.extend(chunk_text(parsed))
+            all_files.append((filename, path))
+
+    if enabled_files:
+        files_to_load = [(filename, path) for filename, path in all_files if filename in enabled_files]
+    else:
+        files_to_load = all_files
+
+    docs = []
+    for filename, path in files_to_load:
+        parsed = parse_document_file(path)
+        if parsed and parsed.get("content"):
+            docs.extend(chunk_text(parsed))
     return docs
     
 def chunk_text(doc: dict, chunk_size: int = Chunk_Size):
@@ -247,7 +258,7 @@ def search(query: str, top_k: int = Top_K, module_key: str = None):
 
     module_key = sanitize_module_key(module_key)
 
-    if module_key and is_module_enabled(module_key):
+    if module_key:
         if module_key not in module_indexes:
             module_index, docs = build_module_index(module_key)
             if module_index is not None and docs:

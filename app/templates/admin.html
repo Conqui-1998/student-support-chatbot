@@ -12,39 +12,45 @@
 		</div>
 
 		<h1>Module Assistant Admin</h1>
-		<p>Enable or disable chatbot access for the module you are currently managing.</p>
+		<p>Select which files from the current module folder the chatbot may use.</p>
 
-		{% if module %}
+		{% if module_key %}
 		<section class="admin-section">
 			<h2>Current Module</h2>
+			<p><code>{{ module_key }}</code></p>
 			<form method="post" action="/admin/modules" class="module-access-form">
-				<input type="hidden" name="module_key" value="{{ module.module_key }}" />
+				<input type="hidden" name="module_key" value="{{ module_key }}" />
+				<div class="admin-actions">
+					<button type="button" class="pill-button" onclick="setAllModuleFiles(true)">Select all</button>
+					<button type="button" class="pill-button" onclick="setAllModuleFiles(false)">Select none</button>
+				</div>
 				<table>
 					<thead>
 						<tr>
 							<th>Enabled</th>
-							<th>Module key</th>
-							<th>Files</th>
-							<th>Folder</th>
+							<th>File</th>
+							<th>Size</th>
 						</tr>
 					</thead>
 					<tbody>
+						{% for file in module_files %}
 						<tr>
 							<td>
 								<input
 									type="checkbox"
-									name="enabled"
-									{% if module.enabled %}checked{% endif %}
+									name="enabled_files"
+									value="{{ file.name }}"
+									{% if file.enabled %}checked{% endif %}
 								/>
 							</td>
-							<td><code>{{ module.module_key }}</code></td>
-							<td>{{ module.file_count }}</td>
-							<td><code>{{ module.module_dir }}</code></td>
+							<td><code>{{ file.name }}</code></td>
+							<td>{{ file.size }} bytes</td>
 						</tr>
+						{% endfor %}
 					</tbody>
 				</table>
 				<div class="admin-actions">
-					<button type="submit" class="pill-button">Save module access</button>
+					<button type="submit" class="pill-button">Save file access</button>
 				</div>
 			</form>
 		</section>
@@ -98,6 +104,12 @@
 		if (!selected) return;
 
 		selected.style.display = selected.style.display === "block" ? "none" : "block";
+	}
+
+	function setAllModuleFiles(checked) {
+		document.querySelectorAll('input[name="enabled_files"]').forEach((input) => {
+			input.checked = checked;
+		});
 	}
 	</script>
 </body>

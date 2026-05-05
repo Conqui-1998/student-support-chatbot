@@ -16,7 +16,7 @@ MOODLE_MODULE_MAP_JSON = os.getenv("MOODLE_MODULE_MAP_JSON", "{}")
 INGEST_TOKEN = os.getenv("INGEST_TOKEN", "")
 
 DATA_MODULES_DIR = Path("data") / "modules"
-MODULE_ACCESS_FILE = Path("data") / "module_access.json"
+MODULE_FILE_ACCESS_FILE = Path("data") / "module_file_access.json"
 LAST_SYNC_STATE: dict[str, Any] = {}
 
 
@@ -90,69 +90,91 @@ def list_available_modules() -> list[str]:
 
 
 def load_module_access() -> dict[str, Any]:
-    if not MODULE_ACCESS_FILE.exists():
-        return {"enabled": []}
+    if not MODULE_FILE_ACCESS_FILE.exists():
+        return {"modules": {}}
     try:
-        data = json.loads(MODULE_ACCESS_FILE.read_text(encoding="utf-8"))
+        data = json.loads(MODULE_FILE_ACCESS_FILE.read_text(encoding="utf-8"))
         if isinstance(data, dict):
-            enabled = data.get("enabled", [])
-            if isinstance(enabled, list):
-                return {"enabled": [sanitize_module_key(x) for x in enabled if sanitize_module_key(x)]}
+            modules = data.get("modules", {})
+            if isinstance(modules, dict):
+                normalized: dict[str, list[str]] = {}
+                for module_key, files in modules.items():
+                    safe_module = sanitize_module_key(module_key)
+                    if not safe_module or not isinstance(files, list):
+                        continue
+                    normalized[safe_module] = sorted({
+                        str(filename)
+                        for filename in files
+                        if str(filename).strip()
+                    })
+                return {"modules": normalized}
     except Exception:
         pass
-    return {"enabled": []}
+    return {"modules": {}}
 
 
-def save_module_access(enabled_modules: list[str]) -> dict[str, Any]:
-    MODULE_ACCESS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    enabled = sorted({sanitize_module_key(x) for x in enabled_modules if sanitize_module_key(x)})
-    payload = {"enabled": enabled}
-    MODULE_ACCESS_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+def list_module_files(module_key: str | None) -> list[dict[str, Any]]:
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return []
+
+    module_dir = DATA_MODULES_DIR / safe_key
+    if not module_dir.exists():
+        return []
+
+    files = []
+    for path in sorted(module_dir.iterdir()):
+        if path.is_file() and path.suffix.lower() in {".md", ".pdf", ".docx", ".pptx"}:
+            files.append({
+                "name": path.name,
+                "path": str(path),
+                "size": path.stat().st_size,
+            })
+    return files
+
+
+def load_module_file_access(module_key: str | None) -> dict[str, Any]:
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return {"enabled_files": []}
+    access = load_module_access()
+    modules = access.get("modules", {})
+    enabled_files = modules.get(safe_key, [])
+    if not isinstance(enabled_files, list):
+        enabled_files = []
+    return {"enabled_files": [str(x) for x in enabled_files if str(x).strip()]}
+
+
+def save_module_file_access(module_key: str | None, enabled_files: list[str]) -> dict[str, Any]:
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return load_module_access()
+    access = load_module_access()
+    modules = access.get("modules", {})
+    if not isinstance(modules, dict):
+        modules = {}
+    modules[safe_key] = sorted({str(x) for x in enabled_files if str(x).strip()})
+    payload = {"modules": modules}
+    MODULE_FILE_ACCESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    MODULE_FILE_ACCESS_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return payload
 
 
-def is_module_enabled(module_key: str | None) -> bool:
-    safe_key = sanitize_module_key(module_key)
-    if not safe_key:
-        return False
-    access = load_module_access()
-    enabled = access.get("enabled", [])
-    if not enabled:
-        return True
-    return safe_key in enabled
-
-
-def set_module_enabled(module_key: str | None, enabled: bool) -> dict[str, Any]:
-    safe_key = sanitize_module_key(module_key)
-    access = load_module_access()
-    current = set(access.get("enabled", []))
-    if not safe_key:
-        return access
-    if enabled:
-        current.add(safe_key)
-    else:
-        current.discard(safe_key)
-    return save_module_access(list(current))
-
-
 def get_module_access_rows(module_key: str | None = None) -> list[dict[str, Any]]:
-    access = load_module_access()
-    enabled = set(access.get("enabled", []))
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return []
+    access = load_module_file_access(safe_key)
+    enabled = set(access.get("enabled_files", []))
     rows = []
-    module_keys = list_available_modules()
-    if module_key:
-        safe_key = sanitize_module_key(module_key)
-        module_keys = [safe_key] if safe_key in module_keys else [safe_key]
-    for key in module_keys:
-        if not key:
-            continue
-        module_dir = DATA_MODULES_DIR / key
-        files = [path for path in module_dir.glob("*") if path.is_file() and path.suffix.lower() in {".md", ".pdf", ".docx", ".pptx"}]
+    for file_info in list_module_files(safe_key):
         rows.append({
-            "module_key": key,
-            "enabled": key in enabled if enabled else True,
-            "file_count": len(files),
-            "module_dir": str(module_dir),
+            "module_key": safe_key,
+            "file_name": file_info["name"],
+            "enabled": file_info["name"] in enabled if enabled else True,
+            "file_count": len(list_module_files(safe_key)),
+            "module_dir": str(DATA_MODULES_DIR / safe_key),
+            "size": file_info["size"],
         })
     return rows
 
