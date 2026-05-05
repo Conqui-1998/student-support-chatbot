@@ -270,9 +270,7 @@
 					<ul>
 						${data.sources.map(s => `
 							<li>
-								<a href="${escapeAttribute(s.url || "#")}" target="_blank" rel="noopener noreferrer">
-									${escapeHtml(s.title)}
-								</a>
+								${s.url ? `<a href="${escapeAttribute(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.title)}</a>` : `<span>${escapeHtml(s.title)}</span>`}
 							</li>
 						`).join("")}
 					</ul>
