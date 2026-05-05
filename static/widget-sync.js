@@ -187,6 +187,28 @@
 			.filter(Boolean)
 			.slice(0, 12);
 		const pageClasses = Array.from(document.body.classList).join(" ");
+		const windowKeys = Object.getOwnPropertyNames(window)
+			.filter((key) => /^(M|moodle|Moodle|requirejs|jQuery|Y|jQuery\$|_)([A-Z0-9_]|$)/.test(key) || key === "M" || key === "Moodle" || key === "requirejs")
+			.slice(0, 80)
+			.sort();
+		const metaTags = Array.from(document.querySelectorAll("meta"))
+			.slice(0, 40)
+			.map((meta) => ({
+				name: meta.getAttribute("name") || meta.getAttribute("property") || meta.getAttribute("charset") || "",
+				content: meta.getAttribute("content") || meta.getAttribute("charset") || ""
+			}))
+			.filter((meta) => meta.name || meta.content);
+		const links = Array.from(document.querySelectorAll("link[rel]"))
+			.slice(0, 40)
+			.map((link) => ({
+				rel: link.getAttribute("rel") || "",
+				href: link.getAttribute("href") || ""
+			}))
+			.filter((link) => link.rel || link.href);
+		const scripts = Array.from(document.querySelectorAll("script[src]"))
+			.slice(0, 40)
+			.map((script) => script.getAttribute("src"))
+			.filter(Boolean);
 		const data = {
 			url: window.location.href,
 			title: document.title,
@@ -196,7 +218,11 @@
 			script_src: SCRIPT_TAG && SCRIPT_TAG.src ? SCRIPT_TAG.src : "(unknown)",
 			window_M: typeof window.M !== "undefined",
 			window_Moodle: typeof window.Moodle !== "undefined",
-			window_requirejs: typeof window.requirejs !== "undefined"
+			window_requirejs: typeof window.requirejs !== "undefined",
+			window_keys: windowKeys.length ? windowKeys : ["(none found)"],
+			meta: metaTags.length ? metaTags : ["(none found)"],
+			links: links.length ? links : ["(none found)"],
+			scripts: scripts.length ? scripts : ["(none found)"]
 		};
 		body.textContent = JSON.stringify(data, null, 2);
 	}
