@@ -13,6 +13,7 @@ import httpx
 MOODLE_BASE_URL = os.getenv("MOODLE_BASE_URL", "").rstrip("/")
 MOODLE_TOKEN = os.getenv("MOODLE_TOKEN", "")
 MOODLE_MODULE_MAP_JSON = os.getenv("MOODLE_MODULE_MAP_JSON", "{}")
+INGEST_TOKEN = os.getenv("INGEST_TOKEN", "")
 
 DATA_MODULES_DIR = Path("data") / "modules"
 LAST_SYNC_STATE: dict[str, Any] = {}
@@ -54,6 +55,25 @@ def resolve_course_id(module_key: str | None) -> int | None:
 
 def has_moodle_access() -> bool:
     return bool(MOODLE_BASE_URL and MOODLE_TOKEN)
+
+
+def has_ingest_access() -> bool:
+    return bool(INGEST_TOKEN)
+
+
+def ingest_token_matches(token: str | None) -> bool:
+    if not INGEST_TOKEN or not token:
+        return False
+    return secrets_compare(INGEST_TOKEN, token)
+
+
+def secrets_compare(expected: str, provided: str) -> bool:
+    try:
+        import hmac
+
+        return hmac.compare_digest(expected, provided)
+    except Exception:
+        return expected == provided
 
 
 def _strip_html(value: str) -> str:
@@ -112,6 +132,66 @@ def _course_content_to_markdown(course: dict[str, Any]) -> str:
                 lines.append("")
 
     return "\n".join(lines).strip() + "\n"
+
+
+def write_module_markdown(
+    module_key: str | None,
+    markdown: str,
+    *,
+    source: str = "manual",
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    global LAST_SYNC_STATE
+    module_key = sanitize_module_key(module_key)
+    if not module_key:
+        LAST_SYNC_STATE = {
+            "module_key": module_key,
+            "ok": False,
+            "message": "Invalid module key.",
+            "source": source,
+        }
+        return LAST_SYNC_STATE
+
+    cleaned_markdown = (markdown or "").strip()
+    if not cleaned_markdown:
+        LAST_SYNC_STATE = {
+            "module_key": module_key,
+            "ok": False,
+            "message": "No markdown content provided.",
+            "source": source,
+        }
+        return LAST_SYNC_STATE
+
+    module_dir = DATA_MODULES_DIR / module_key
+    module_dir.mkdir(parents=True, exist_ok=True)
+    output_path = module_dir / "moodle-course.md"
+
+    header_lines = [
+        f"Title: {metadata.get('title', f'Moodle module {module_key}') if metadata else f'Moodle module {module_key}'}",
+        f"URL: {metadata.get('url', MOODLE_BASE_URL) if metadata else MOODLE_BASE_URL}",
+        "Category: moodle-module",
+        f"Source: {source}",
+    ]
+    if metadata:
+        for key in ("course_id", "section_count", "content_count", "version", "updated_at"):
+            if metadata.get(key) is not None:
+                header_lines.append(f"{key.replace('_', ' ').title()}: {metadata.get(key)}")
+    header_lines.append("")
+    header_lines.append(cleaned_markdown)
+
+    final_markdown = "\n".join(header_lines).strip() + "\n"
+    output_path.write_text(final_markdown, encoding="utf-8")
+
+    LAST_SYNC_STATE = {
+        "module_key": module_key,
+        "ok": True,
+        "source": source,
+        "message": f"Wrote {output_path.name}",
+        "path": str(output_path),
+        "size": len(final_markdown.encode("utf-8")),
+        "metadata": metadata or {},
+    }
+    return LAST_SYNC_STATE
 
 
 def sync_module_from_moodle(module_key: str | None) -> bool:

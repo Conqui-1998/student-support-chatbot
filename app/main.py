@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,7 +11,17 @@ import os
 
 from app.models import ChatRequest, ChatResponse, SourceItem
 from app.rag import search, build_index
-from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR, resolve_course_id, has_moodle_access, LAST_SYNC_STATE, debug_sync_module_from_moodle
+from app.moodle_sync import (
+    sanitize_module_key,
+    DATA_MODULES_DIR,
+    resolve_course_id,
+    has_moodle_access,
+    has_ingest_access,
+    ingest_token_matches,
+    LAST_SYNC_STATE,
+    debug_sync_module_from_moodle,
+    write_module_markdown,
+)
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
@@ -122,7 +132,51 @@ def module_status(module_key: str):
 def module_sync_debug(module_key: str):
     result = debug_sync_module_from_moodle(module_key)
     return result
-    
+
+@app.post("/ingest/module")
+async def ingest_module(
+    payload: dict,
+    authorization: str | None = Header(default=None),
+    x_ingest_token: str | None = Header(default=None),
+):
+    token = None
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    elif x_ingest_token:
+        token = x_ingest_token.strip()
+
+    if not has_ingest_access():
+        raise HTTPException(status_code=503, detail="Ingest is not configured.")
+    if not ingest_token_matches(token):
+        raise HTTPException(status_code=401, detail="Invalid ingest token.")
+
+    module_key = sanitize_module_key(payload.get("module_key"))
+    if not module_key:
+        raise HTTPException(status_code=400, detail="Missing or invalid module_key.")
+
+    markdown = payload.get("markdown") or payload.get("content") or ""
+    metadata = payload.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    if payload.get("title") and not metadata.get("title"):
+        metadata["title"] = payload.get("title")
+    if payload.get("url") and not metadata.get("url"):
+        metadata["url"] = payload.get("url")
+    if payload.get("course_id") is not None and metadata.get("course_id") is None:
+        metadata["course_id"] = payload.get("course_id")
+
+    result = write_module_markdown(
+        module_key,
+        markdown,
+        source=payload.get("source") or "moodle-push",
+        metadata=metadata,
+    )
+    return {
+        "ok": result.get("ok", False),
+        "module_key": module_key,
+        "status": result,
+    }
+
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
     logs=get_logs()
