@@ -11,7 +11,7 @@ import os
 
 from app.models import ChatRequest, ChatResponse, SourceItem
 from app.rag import search, build_index
-from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR, resolve_course_id, has_moodle_access, LAST_SYNC_STATE
+from app.moodle_sync import sanitize_module_key, DATA_MODULES_DIR, resolve_course_id, has_moodle_access, LAST_SYNC_STATE, debug_sync_module_from_moodle
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
 from app.logs import add_log, get_logs
@@ -117,6 +117,11 @@ def module_status(module_key: str):
         "files": files,
         "file_count": len(files),
     }
+
+@app.post("/module-sync-debug/{module_key}")
+def module_sync_debug(module_key: str):
+    result = debug_sync_module_from_moodle(module_key)
+    return result
     
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
