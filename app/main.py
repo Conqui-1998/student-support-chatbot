@@ -21,6 +21,9 @@ from app.moodle_sync import (
     LAST_SYNC_STATE,
     debug_sync_module_from_moodle,
     write_module_markdown,
+    get_module_access_rows,
+    is_module_enabled,
+    set_module_enabled,
 )
 from app.safety import is_sensitive_query, classify_query
 from app.prompt import System_Prompt
@@ -121,6 +124,7 @@ def module_status(module_key: str):
         "module_key": safe_key,
         "course_id": resolve_course_id(safe_key),
         "moodle_access": has_moodle_access(),
+        "enabled": is_module_enabled(safe_key),
         "last_sync": LAST_SYNC_STATE,
         "module_dir": str(module_dir),
         "exists": module_dir.exists(),
@@ -178,7 +182,7 @@ async def ingest_module(
     }
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request):
+def admin_page(request: Request, module_key: str | None = None):
     logs=get_logs()
     
     rows = ""
@@ -208,9 +212,20 @@ def admin_page(request: Request):
         request=request,
         name="admin.html",
         context={
-            "rows": rows
+            "rows": rows,
+            "module": get_module_access_rows(module_key)[0] if get_module_access_rows(module_key) else None,
+            "module_key": module_key,
         }
     )
+
+@app.post("/admin/modules")
+async def admin_modules(request: Request):
+    form = await request.form()
+    module_key = form.get("module_key")
+    enabled = form.get("enabled") == "on"
+    set_module_enabled(module_key, enabled)
+    redirect_target = f"/admin?module_key={module_key}" if module_key else "/admin"
+    return RedirectResponse(redirect_target, status_code=303)
     
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):

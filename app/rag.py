@@ -4,7 +4,7 @@ import numpy as np
 from openai import OpenAI
 from dotenv import load_dotenv
 import re
-from app.moodle_sync import has_moodle_access
+from app.moodle_sync import has_moodle_access, is_module_enabled
 
 try:
     from pypdf import PdfReader
@@ -247,7 +247,7 @@ def search(query: str, top_k: int = Top_K, module_key: str = None):
 
     module_key = sanitize_module_key(module_key)
 
-    if module_key:
+    if module_key and is_module_enabled(module_key):
         if module_key not in module_indexes:
             module_index, docs = build_module_index(module_key)
             if module_index is not None and docs:

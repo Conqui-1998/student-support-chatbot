@@ -2,38 +2,84 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8" />
-	<title>Admin Monitoring</title>
+	<title>Module Assistant Admin</title>
 	<link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
 	<main class="container admin-container">
 		<div class="top-nav">
-            <a href="/" class="pill-button">Back to chat</a>
-        </div>
-        
-        <h1>Technical Monitoring View</h1>
-        <p>Recent chatbot interactions for debugging and safeguard monitoring.</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Query</th>
-                    <th>Category</th>
-                    <th>Fallback</th>
-                    <th>Sensitive</th>
-                    <th>Sources</th>
-					<th>Preview</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{rows | safe}}
-            </tbody>
-        </table>
+			<a href="/" class="pill-button">Back to chat</a>
+		</div>
+
+		<h1>Module Assistant Admin</h1>
+		<p>Enable or disable chatbot access for the module you are currently managing.</p>
+
+		{% if module %}
+		<section class="admin-section">
+			<h2>Current Module</h2>
+			<form method="post" action="/admin/modules" class="module-access-form">
+				<input type="hidden" name="module_key" value="{{ module.module_key }}" />
+				<table>
+					<thead>
+						<tr>
+							<th>Enabled</th>
+							<th>Module key</th>
+							<th>Files</th>
+							<th>Folder</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<input
+									type="checkbox"
+									name="enabled"
+									{% if module.enabled %}checked{% endif %}
+								/>
+							</td>
+							<td><code>{{ module.module_key }}</code></td>
+							<td>{{ module.file_count }}</td>
+							<td><code>{{ module.module_dir }}</code></td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="admin-actions">
+					<button type="submit" class="pill-button">Save module access</button>
+				</div>
+			</form>
+		</section>
+		{% else %}
+		<section class="admin-section">
+			<h2>No module selected</h2>
+			<p>Open this page with a module key, for example:</p>
+			<pre>/admin?module_key=BUSB4011</pre>
+		</section>
+		{% endif %}
+
+		<section class="admin-section">
+			<h2>Recent Interactions</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Timestamp</th>
+						<th>Query</th>
+						<th>Category</th>
+						<th>Fallback</th>
+						<th>Sensitive</th>
+						<th>Sources</th>
+						<th>Preview</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{rows | safe}}
+				</tbody>
+			</table>
+		</section>
 	</main>
-	
+
 	<script src="/static/app.js"></script>
 	<script>
-		const savedTheme =localStorage.getItem("theme") || "light";
+		const savedTheme = localStorage.getItem("theme") || "light";
 		if (savedTheme === "dark") {
 			document.body.classList.add("dark-mode");
 		}
@@ -41,16 +87,16 @@
 	<script>
 	function togglePreview(id) {
 		const previews = document.querySelectorAll(".snippet-preview");
-		
+
 		previews.forEach(preview => {
 			if (preview.id !== id) {
 				preview.style.display = "none";
 			}
 		});
-		
+
 		const selected = document.getElementById(id)
 		if (!selected) return;
-		
+
 		selected.style.display = selected.style.display === "block" ? "none" : "block";
 	}
 	</script>

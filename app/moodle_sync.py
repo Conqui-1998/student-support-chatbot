@@ -16,6 +16,7 @@ MOODLE_MODULE_MAP_JSON = os.getenv("MOODLE_MODULE_MAP_JSON", "{}")
 INGEST_TOKEN = os.getenv("INGEST_TOKEN", "")
 
 DATA_MODULES_DIR = Path("data") / "modules"
+MODULE_ACCESS_FILE = Path("data") / "module_access.json"
 LAST_SYNC_STATE: dict[str, Any] = {}
 
 
@@ -74,6 +75,86 @@ def secrets_compare(expected: str, provided: str) -> bool:
         return hmac.compare_digest(expected, provided)
     except Exception:
         return expected == provided
+
+
+def list_available_modules() -> list[str]:
+    if not DATA_MODULES_DIR.exists():
+        return []
+    modules = []
+    for path in sorted(DATA_MODULES_DIR.iterdir()):
+        if path.is_dir():
+            key = sanitize_module_key(path.name)
+            if key:
+                modules.append(key)
+    return sorted(set(modules))
+
+
+def load_module_access() -> dict[str, Any]:
+    if not MODULE_ACCESS_FILE.exists():
+        return {"enabled": []}
+    try:
+        data = json.loads(MODULE_ACCESS_FILE.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            enabled = data.get("enabled", [])
+            if isinstance(enabled, list):
+                return {"enabled": [sanitize_module_key(x) for x in enabled if sanitize_module_key(x)]}
+    except Exception:
+        pass
+    return {"enabled": []}
+
+
+def save_module_access(enabled_modules: list[str]) -> dict[str, Any]:
+    MODULE_ACCESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    enabled = sorted({sanitize_module_key(x) for x in enabled_modules if sanitize_module_key(x)})
+    payload = {"enabled": enabled}
+    MODULE_ACCESS_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return payload
+
+
+def is_module_enabled(module_key: str | None) -> bool:
+    safe_key = sanitize_module_key(module_key)
+    if not safe_key:
+        return False
+    access = load_module_access()
+    enabled = access.get("enabled", [])
+    if not enabled:
+        return True
+    return safe_key in enabled
+
+
+def set_module_enabled(module_key: str | None, enabled: bool) -> dict[str, Any]:
+    safe_key = sanitize_module_key(module_key)
+    access = load_module_access()
+    current = set(access.get("enabled", []))
+    if not safe_key:
+        return access
+    if enabled:
+        current.add(safe_key)
+    else:
+        current.discard(safe_key)
+    return save_module_access(list(current))
+
+
+def get_module_access_rows(module_key: str | None = None) -> list[dict[str, Any]]:
+    access = load_module_access()
+    enabled = set(access.get("enabled", []))
+    rows = []
+    module_keys = list_available_modules()
+    if module_key:
+        safe_key = sanitize_module_key(module_key)
+        module_keys = [safe_key] if safe_key in module_keys else [safe_key]
+    for key in module_keys:
+        if not key:
+            continue
+        module_dir = DATA_MODULES_DIR / key
+        files = [path for path in module_dir.glob("*") if path.is_file() and path.suffix.lower() in {".md", ".pdf", ".docx", ".pptx"}]
+        rows.append({
+            "module_key": key,
+            "enabled": key in enabled if enabled else True,
+            "file_count": len(files),
+            "module_dir": str(module_dir),
+        })
+    return rows
 
 
 def _strip_html(value: str) -> str:
