@@ -39,7 +39,7 @@
 	}
 
 	async function renderStatusPill(root) {
-		if (!MODULE_KEY) return;
+		if (!MODULE_KEY || DEBUG_STATUS !== "true") return;
 
 		const status = document.createElement("div");
 		status.className = "widget-status-pill";
@@ -87,7 +87,7 @@
 	}
 
 	async function renderStatusDetail(root) {
-		if (!MODULE_KEY) return;
+		if (!MODULE_KEY || DEBUG_STATUS !== "true") return;
 		const detail = createStatusDetail(root);
 		detail.textContent = "Loading Moodle module status...";
 
@@ -131,7 +131,7 @@
 	}
 
 	async function renderModuleBanner(root) {
-		if (!MODULE_KEY) return;
+		if (!MODULE_KEY || DEBUG_STATUS !== "true") return;
 		const banner = createModuleBanner(root);
 		banner.textContent = "Checking module sync...";
 		banner.className = "module-status-banner is-pending";
