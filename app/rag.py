@@ -4,7 +4,7 @@ import numpy as np
 from openai import OpenAI
 from dotenv import load_dotenv
 import re
-from app.moodle_sync import sync_module_from_moodle, has_moodle_access
+from app.moodle_sync import has_moodle_access
 
 load_dotenv()
 
@@ -158,15 +158,6 @@ def search(query: str, top_k: int = Top_K, module_key: str = None):
             if module_index is not None and docs:
                 module_indexes[module_key] = module_index
                 module_documents[module_key] = docs
-            elif has_moodle_access():
-                try:
-                    sync_module_from_moodle(module_key)
-                    module_index, docs = build_module_index(module_key)
-                    if module_index is not None and docs:
-                        module_indexes[module_key] = module_index
-                        module_documents[module_key] = docs
-                except Exception as exc:
-                    print(f"Moodle sync failed for {module_key}: {exc}")
         module_index = module_indexes.get(module_key)
         docs = module_documents.get(module_key, [])
         if module_index is not None and docs:
