@@ -158,35 +158,6 @@
 		}
 	}
 
-	async function runDebugSync(root) {
-		if (!DEBUG_STATUS || !MODULE_KEY) return;
-		const banner = createModuleBanner(root);
-		banner.textContent = "Running Moodle sync debug...";
-		banner.className = "module-status-banner is-pending";
-
-		try {
-			const res = await fetch(new URL(`/module-sync-debug/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" }
-			});
-			const data = await res.json();
-			if (data.ok) {
-				const extra = [];
-				if (typeof data.section_count === "number") extra.push(`sections=${data.section_count}`);
-				if (typeof data.module_count === "number") extra.push(`modules=${data.module_count}`);
-				if (data.sample_keys && data.sample_keys.length) extra.push(`sample_keys=${data.sample_keys.join(",")}`);
-				banner.textContent = `Debug sync ok for course ${data.course_id ?? "unknown"} (${extra.join(" | ") || "no extra details"})`;
-				banner.className = "module-status-banner is-ready";
-			} else {
-				banner.textContent = `Debug sync failed: ${data.message || "unknown error"}`;
-				banner.className = "module-status-banner is-error";
-			}
-		} catch (err) {
-			banner.textContent = `Debug sync failed: ${err.message || err}`;
-			banner.className = "module-status-banner is-error";
-		}
-	}
-
 	function createHtml() {
 		return `
 			<div class="widget-launcher">
@@ -425,7 +396,6 @@
 		renderStatusPill(root);
 		renderStatusDetail(root);
 		renderModuleBanner(root);
-		runDebugSync(root);
 	}
 
 	if (document.readyState === "loading") {
