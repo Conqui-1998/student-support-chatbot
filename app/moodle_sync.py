@@ -15,6 +15,7 @@ MOODLE_TOKEN = os.getenv("MOODLE_TOKEN", "")
 MOODLE_MODULE_MAP_JSON = os.getenv("MOODLE_MODULE_MAP_JSON", "{}")
 
 DATA_MODULES_DIR = Path("data") / "modules"
+LAST_SYNC_STATE: dict[str, Any] = {}
 
 
 def sanitize_module_key(module_key: str | None) -> str | None:
@@ -114,9 +115,16 @@ def _course_content_to_markdown(course: dict[str, Any]) -> str:
 
 
 def sync_module_from_moodle(module_key: str | None) -> bool:
+    global LAST_SYNC_STATE
     module_key = sanitize_module_key(module_key)
     course_id = resolve_course_id(module_key)
     if not module_key or course_id is None or not has_moodle_access():
+        LAST_SYNC_STATE = {
+            "module_key": module_key,
+            "course_id": course_id,
+            "ok": False,
+            "message": "Missing Moodle configuration or course mapping.",
+        }
         return False
 
     url = f"{MOODLE_BASE_URL}/webservice/rest/server.php"
@@ -127,12 +135,28 @@ def sync_module_from_moodle(module_key: str | None) -> bool:
         "courseid": course_id,
     }
 
-    response = httpx.get(url, params=params, timeout=30)
-    response.raise_for_status()
-    payload = response.json()
+    try:
+        response = httpx.get(url, params=params, timeout=30)
+        response.raise_for_status()
+        payload = response.json()
+    except Exception as exc:
+        LAST_SYNC_STATE = {
+            "module_key": module_key,
+            "course_id": course_id,
+            "ok": False,
+            "message": f"Request failed: {exc}",
+        }
+        raise
 
     if isinstance(payload, dict) and payload.get("exception"):
-        raise RuntimeError(payload.get("message") or "Moodle sync failed")
+        message = payload.get("message") or "Moodle sync failed"
+        LAST_SYNC_STATE = {
+            "module_key": module_key,
+            "course_id": course_id,
+            "ok": False,
+            "message": message,
+        }
+        raise RuntimeError(message)
 
     course = {
         "fullname": f"Course {course_id}",
@@ -143,5 +167,14 @@ def sync_module_from_moodle(module_key: str | None) -> bool:
     module_dir = DATA_MODULES_DIR / module_key
     module_dir.mkdir(parents=True, exist_ok=True)
     output_path = module_dir / "moodle-course.md"
-    output_path.write_text(_course_content_to_markdown(course), encoding="utf-8")
+    markdown = _course_content_to_markdown(course)
+    output_path.write_text(markdown, encoding="utf-8")
+    LAST_SYNC_STATE = {
+        "module_key": module_key,
+        "course_id": course_id,
+        "ok": True,
+        "message": f"Wrote {output_path.name}",
+        "path": str(output_path),
+        "size": len(markdown.encode("utf-8")),
+    }
     return True

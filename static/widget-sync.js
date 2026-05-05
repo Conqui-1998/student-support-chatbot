@@ -51,6 +51,7 @@
 			const data = await res.json();
 			if (data && data.ok) {
 				const courseText = data.course_id ? `course ${data.course_id}` : "no course mapping";
+				const syncText = data.last_sync && data.last_sync.message ? data.last_sync.message : "no sync yet";
 				if (data.exists && data.file_count > 0) {
 					status.textContent = `Moodle sync ready: ${courseText}, ${data.file_count} file(s)`;
 					status.classList.add("is-ready");
@@ -61,6 +62,9 @@
 				if (!data.moodle_access) {
 					status.textContent += " (Moodle access off)";
 					status.classList.add("is-error");
+				}
+				if (data.last_sync && data.last_sync.message) {
+					status.title = syncText;
 				}
 			} else {
 				status.textContent = "Module status unavailable";
@@ -97,6 +101,9 @@
 					`files=${data.file_count}`,
 					`moodle_access=${data.moodle_access ? "yes" : "no"}`
 				];
+				if (data.last_sync && data.last_sync.message) {
+					parts.push(`last_sync=${data.last_sync.message}`);
+				}
 				detail.textContent = parts.join(" | ");
 				if (!data.exists || data.file_count === 0) {
 					detail.classList.add("is-empty");
@@ -133,11 +140,12 @@
 			const res = await fetch(new URL(`/module-status/${encodeURIComponent(MODULE_KEY)}`, API_BASE).href);
 			const data = await res.json();
 			if (data && data.ok) {
+				const syncText = data.last_sync && data.last_sync.message ? data.last_sync.message : "no sync yet";
 				if (data.exists && data.file_count > 0) {
-					banner.textContent = `Module markdown synced: ${data.file_count} file(s) found for course ${data.course_id ?? "unknown"}`;
+					banner.textContent = `Module markdown synced: ${data.file_count} file(s) found for course ${data.course_id ?? "unknown"} (${syncText})`;
 					banner.className = "module-status-banner is-ready";
 				} else {
-					banner.textContent = `Module markdown not found yet for course ${data.course_id ?? "unknown"}`;
+					banner.textContent = `Module markdown not found yet for course ${data.course_id ?? "unknown"} (${syncText})`;
 					banner.className = "module-status-banner is-empty";
 				}
 			} else {
